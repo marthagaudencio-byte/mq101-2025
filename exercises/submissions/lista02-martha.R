@@ -1,0 +1,280 @@
+#' ---
+#' title: "Lista 02 - MQ"
+#' author: "Martha Gaudencio"
+#' ---
+
+
+#MQ101 - Lista 02
+#Nome: Martha Gaudencio da Silva
+#Data: 22/10/2025
+#Descrição: Tipos de variáveis e estatísticas descritivas
+
+#1 - Preparação do ambiente
+
+ library(tidyverse)
+ options(scipen = 999) 
+
+#2 - Base de dados
+
+ dados <- read.csv(file.choose())
+  glimpse(dados)
+  summary(dados)
+
+#Número de colunas: 13; número de linhas: 10.000.
+#Classes das variáveis: qualitativas e numéricas
+#Não existem NA  
+
+# 3 - Classificação de variáveis
+
+# 3.1 - Tipo teórico de cada variável
+
+#Sexo: qualitativa nominal binária
+#Escolaridade: qualitativa ordinal
+#Anos de estudo: quantitativa discreta
+#Rede escolar: qualitativa nominal binária
+
+#3.2 Coerência entre tipo teórico e classe:
+
+dados <- dados |>
+  mutate(
+    sexo = factor(sexo),
+    rede_escolar = factor(rede_escolar),
+    plano_saude = factor(plano_saude),
+    diagnostico = factor(diagnostico),
+    escolaridade = factor(escolaridade,
+                          levels = c("Fundamental","Medio","Superior"),
+                          ordered = TRUE)
+  )
+str(dados)
+
+#3.3 Registre, em comentários, por que cada variável é daquele tipo
+
+#Sexo é qualitativa nominal porque se trata de uma informação não-numérica e que
+#apenas dá nome à categoria, no caso, feminino ou masculino, sendo aqui também
+#binária. O mesmo vale para rede escolar. Já escolaridade é também qualitativa,
+#mas ordinal, porque existe uma ordem que se segue em continuidade. Por fim,
+#anos de estudo é numérica categórica pois a base considera apenas números
+#inteiros. 
+
+#4 - Variáveis Qualitativas
+
+#4.1 - Frequências absolutas e relativas
+
+tab_plano <- table(dados$plano_saude)
+prop_plano <- prop.table(tab_plano)
+cbind(FA = tab_plano, FR = round(100 * prop_plano, 1))
+
+#SUS é a moda, porque é a que mais se repete. E a proporção dominante é de
+#50,2% do SUS.
+
+#4.2 - Gráfico de barras
+
+install.packages("ggplot2")
+library(ggplot2)
+install.packages("dplyr")
+library(dplyr)
+
+dados |>
+  count(plano_saude) |>
+  ggplot(aes(x = plano_saude, y = n)) +
+  geom_col() +
+  labs(x = "Plano de saude", y = "Frequencia",
+       title = "Distribuição de plano de saúde")
+
+#4.3 - Barras ordenadas
+
+dados |>
+  count(escolaridade) |>
+  ggplot(aes(x = escolaridade, y = n)) +
+  geom_col() +
+  labs(x = "Escolaridade (ordem substantiva)", y = "Frequencia")
+
+#Como trata-se de uma variável ordinal, manter a ordem das variáveis permite 
+#visualizar a informação com mais sentido, no caso percebendo que o ensino
+#superior corresponde ao 3º nível e possui menos membros da amostra com este
+#grau em comparação com os que possuem fundamental e médio. Já o gráfico de
+#barras em variáveis não ordinais como a do plano de saúde permite ver qual
+#possui mais aderência indo do menor para o maior sem que seja uma sequência
+#ordinal das variáveis. 
+
+#5 - Variáveis quantitativas
+
+#5.1 Tendência central e dispersão
+
+sumario_idade <- dados |>
+  summarise(
+    n = sum(!is.na(idade)),
+    media = mean(idade, na.rm = TRUE),
+    mediana= median(idade, na.rm = TRUE),
+    min = min(idade, na.rm = TRUE),
+    max = max(idade, na.rm = TRUE),
+    dp = sd(idade, na.rm = TRUE)
+    
+  )
+sumario_idade
+
+sumario_pressao_sistolica <- dados |>
+  summarise(
+    n = sum(!is.na(pressao_sistolica)),
+    media = mean(pressao_sistolica, na.rm = TRUE),
+    mediana= median(pressao_sistolica, na.rm = TRUE),
+    min = min(pressao_sistolica, na.rm = TRUE),
+    max = max(pressao_sistolica, na.rm = TRUE),
+    dp = sd(pressao_sistolica, na.rm = TRUE)
+    
+  )
+sumario_pressao_sistolica
+
+#Tanto a média quanto a mediana de idade e de pressão sistólica estão 
+#simétricas, evidenciando que os dados não possuem valores que destoam
+#muito da média para interferir na mediana. 
+
+#5.2 Histograma e boxplot
+
+ggplot(dados, aes(x = idade)) +
+  geom_histogram(bins = 20) +
+  labs(title = "Histograma de Idade")
+
+ggplot(dados, aes(y = idade)) +
+  geom_boxplot() +
+  labs(title = "Boxplot de Idade")
+
+ggplot(dados, aes(x = pressao_sistolica)) +
+  geom_histogram(bins = 20) +
+  labs(title = "Histograma de pressao sistolica")
+
+ggplot(dados, aes(y = pressao_sistolica)) +
+  geom_boxplot() +
+  labs(title = "Boxplot de pressao sistolica")
+
+#O Histograma de idade tem a cauda ao lado direito, permite visualizar a 
+#moda na idade 40, o que converge com a média apresentada anteriormente. 
+#O boxplot de idade tem a mediana no 40, também conforme mostrado e permite
+#visualizar os dados discrepantes das idades em torno de 80 anos, além de
+#mostrar que o 1º quartil está em torno de 30 e o 3º quartil está em torno de
+#50 anos.
+
+#Já o gráfico de pressão sistólica permite visualizar que os maiores valores
+#estão nas proximidades de 125, valor próximo à média e mediana de 122. O 
+#histograma possui uma simetria, ao contrário da idade. O boxplot apresenta
+#também a mediana de 125 e os valores destoantes na faixa de 175, também
+#permitindo visualizar os quartis. 
+
+#6 - Tabelas cruzadas
+
+#6.1 - Cruzando duas qualitativas
+
+tab_cross <- table(dados$diagnostico, dados$plano_saude)
+tab_cross
+round(100 * prop.table(tab_cross, margin = 2), 1)
+
+#No SUS, o mais prevalente é sem diagnóstico (80,7%), seguido de HAS (12,5%).
+#Na rede privada, o mais prevalente é sem também (80,6%), seguido de HAS (12,1%).
+#A mesma prevalência se repete em quem possui ambos e nenhum.
+
+#6.2 - Resumo de quantitativa por grupo
+
+dados |>
+  group_by(sexo) |>
+  summarise(
+    n = n(),
+    media_idade = mean(idade, na.rm = TRUE),
+    dp_idade = sd(idade, na.rm = TRUE),
+    mediana_idade = median(idade, na.rm = TRUE)
+  )
+
+dados |>
+  group_by(escolaridade) |>
+  summarise(
+    n = n(),
+    media_idade = mean(idade, na.rm = TRUE),
+    dp_idade = sd(idade, na.rm = TRUE),
+    mediana_idade = median(idade, na.rm = TRUE)
+  )
+
+#Em relação à idade por sexo, há uma semelhança na amostra. A média de homens
+#e mulheres é próxima (40,5 e 40,3, respectivamente), com a mesma mediana de 40.
+#Na escolaridade, a mediana de 40 se repete pois é a mesma amostra, sendo que
+#a média de idade para superior, médio e fundamental também estão na faixa dos
+#40 anos. Os desvios-padrão de ambos os grupos também mantém-se próximas pela
+#lógica. 
+
+#7 - Valores ausentes e outliers
+
+#7.1 - Ausentes
+
+colSums(is.na(dados))
+
+#A base de dados não retornou valores de células vazias, que seriam os NA.
+
+#7.2 - Outliers
+
+Q <- quantile(dados$tempo_estudo_h, probs = c(.25, .75), na.rm = TRUE)
+IQRv <- IQR(dados$tempo_estudo_h, na.rm = TRUE)
+lim_inf <- Q[1] - 1.5 * IQRv
+lim_sup <- Q[2] + 1.5 * IQRv
+subset_out <- dados |>
+  filter(tempo_estudo_h < lim_inf | tempo_estudo_h > lim_sup)
+nrow(subset_out); head(subset_out)
+
+#Essa amostra possui 348 outliers. Esses dados são informações válidas, pois 
+#mesmo que destoem dos demais permitem interpretar o que motiva esses casos
+#variados, que podem ser desde preenchimento incorreto até variáveis 
+#explicativas dentro das políticas públicas.
+
+#8. Exercícios aplicados (educação e saúde)
+
+#8.1 - Educação
+
+#Distribuição de rede escolar
+
+tab_rede <- table(dados$rede_escolar)
+prop_rede <- prop.table(tab_rede)
+cbind(FA = tab_rede, FR = round(100 * prop_rede, 1))
+
+#Gráfico boxplot 
+
+ggplot(dados, aes(x = escolaridade, y = tempo_estudo_h, fill = escolaridade)) +
+  geom_boxplot() +
+  labs(title = "Boxplot de Tempo de Estudo por Escolaridade",
+       x = "Nível de Escolaridade",
+       y = "Horas de Estudo")
+
+#Interprete
+
+#A frequência absoluta é maior na rede pública, representando 72% da amostra 
+#em contraposição com 28% da privada. Quanto ao boxplot de tempo de estudo 
+#por escolaridade, este evidencia que há sim um padrão monotônico que é 
+#crescente: as medianas vão crescendo logicamente, assim como os percentis
+#mostrados. Ainda que haja valores discrepantes, estes também sobem, o que é
+#lógico visto que uma escolaridade maior exige um tempo de estudo proporcional.
+
+#8.2 - Saúde
+
+#Pressão sistólica - histograma e informações
+
+ggplot(dados, aes(x = pressao_sistolica)) +
+  geom_histogram(bins = 20) +
+  labs(title = "Histograma de Pressão Sistólica", 
+       x = "Pressão Sistólica (mmHg)", 
+       y = "Frequência")
+
+dados |>
+  summarise(
+    media = mean(pressao_sistolica, na.rm = TRUE),
+    mediana = median(pressao_sistolica, na.rm = TRUE),
+    dp = sd(pressao_sistolica, na.rm = TRUE)
+  )
+
+#Cruzamento diagnóstico e plano de saúde
+
+ggplot(dados, aes(x = plano_saude, fill = diagnostico)) +
+  geom_bar(position = "fill") +
+  labs(x = "Plano de saúde", 
+       y = "Proporção", 
+       title = "Distribuição de diagnósticos por plano de saúde")
+
+#Interprete
+
+#Em todos os planos prevalecem respectivamente sem diagnóstico, HAS, outros e
+#DM.
